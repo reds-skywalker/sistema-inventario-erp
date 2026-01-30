@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Lotes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-primary mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand"><i class="fas fa-history"></i> Historial de Lotes</span>
+            <a href="/dashboard.html" class="btn btn-outline-light btn-sm">Volver al Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4>Mis Compras (Lotes)</h4>
+            <button class="btn btn-warning" onclick="abrirModalNuevoLote()">
+                <i class="fas fa-plus-circle"></i> Nueva Compra
+            </button>
+        </div>
+
+        <div class="list-group shadow" id="listaLotes">
+            <div class="text-center p-4">Cargando...</div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalNuevoLote" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">📦 Iniciar Nueva Compra</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNuevoLote">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre / Referencia</label>
+                            <input type="text" class="form-control" id="nombreLote" placeholder="Ej: Lote Febrero - Amazon" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de Compra</label>
+                            <input type="date" class="form-control" id="fechaLote" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Costo Total Pagado ($)</label>
+                            <input type="number" class="form-control border-success" id="costoLote" placeholder="0.00" required>
+                            <div class="form-text">¿Cuánto te costó el paquete cerrado?</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="crearLoteInicial()">Crear y Agregar Productos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ver_lotes.js"></script>
+</body>
+</html>
