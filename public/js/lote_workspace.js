@@ -64,33 +64,48 @@ function renderizar(lote, items) {
     });
 }
 
-// --- CARGA DEL CATÁLOGO CON SELECT2 ---
+// --- CARGA DEL CATÁLOGO CON SELECT2 (Versión Definitiva) ---
 async function cargarCatalogo() {
-    const res = await fetch('/api/productos', { headers: { 'Authorization': token } });
-    const prods = await res.json();
-    
-    const sel = document.getElementById('selProducto');
-    sel.innerHTML = '<option value="">Busca un producto...</option>';
-    
-    prods.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id;
+    try {
+        // Usamos la misma ruta del dashboard que sabemos que funciona perfecto
+        const res = await fetch('/api/productos/stock', { 
+            headers: { 'Authorization': token } 
+        });
+        const data = await res.json();
         
-        // Concatenamos Marca y SKU
-        const marca = p.marca ? ` - ${p.marca}` : ''; 
-        const sku = p.sku ? ` [${p.sku}]` : '';
+        // Extraemos la lista de productos exactamente igual que en el dashboard
+        const prods = data.detalle_productos || data.productos || (Array.isArray(data) ? data : []);
         
-        opt.text = `${p.nombre}${marca}${sku}`; 
-        sel.appendChild(opt);
-    });
+        // Lo imprimimos en consola por si necesitamos investigar (F12)
+        console.log("Productos encontrados para el select:", prods);
 
-    // Inicializar Select2
-    $('#selProducto').select2({
-        theme: 'bootstrap-5',
-        placeholder: "Escribe para buscar...",
-        allowClear: true,
-        width: '100%'
-    });
+        const sel = $('#selProducto'); // Usamos jQuery para manipular Select2
+        sel.empty(); // Limpiamos basura previa
+        
+        // Agregamos la opción por defecto (vacía)
+        sel.append(new Option('Busca un producto...', '', true, true));
+        
+        // Llenamos las opciones reales
+        prods.forEach(p => {
+            const marca = p.marca ? ` - ${p.marca}` : ''; 
+            const sku = p.sku ? ` [${p.sku}]` : '';
+            const texto = `${p.nombre}${marca}${sku}`;
+            
+            // Creamos la opción y la agregamos al select
+            sel.append(new Option(texto, p.id, false, false));
+        });
+
+        // Inicializamos Select2
+        sel.select2({
+            theme: 'bootstrap-5',
+            placeholder: "Escribe para buscar...",
+            allowClear: true,
+            width: '100%'
+        });
+
+    } catch (error) {
+        console.error("Error al cargar el catálogo:", error);
+    }
 }
 
 // --- AGREGAR PRODUCTO ---

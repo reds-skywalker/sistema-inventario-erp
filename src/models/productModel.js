@@ -56,7 +56,7 @@ const Product = {
         const query = `
             SELECT 
                 p.id, 
-                p.nombre, 
+                p.nombre, p.marca,
                 p.sku, 
                 p.imagen_url,
                 -- Sumamos lo disponible en todos los lotes para este producto

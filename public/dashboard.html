@@ -28,22 +28,17 @@
                <a href="/ventas.html" class="btn btn-success me-2">
                     <i class="fas fa-cash-register"></i> Nueva Venta
                 </a>
-
                 <a href="/reportes.html" class="btn btn-info me-2 text-white">
                     <i class="fas fa-chart-line"></i> Reportes
                 </a>
-
                 <a href="/ver_lotes.html" class="btn btn-primary me-2">
                     <i class="fas fa-boxes"></i> Gestionar Lotes
                  </a>
-
-                <button class="btn btn-secondary" onclick="abrirModalCrear()">
+                <button class="btn btn-secondary" onclick="abrirModalNuevo()">
                     <i class="fas fa-plus"></i> Producto
                 </button>
             </div>
         </div>
-
-        
 
         <div class="row mb-4">
             <div class="col-md-6">
@@ -92,23 +87,24 @@
                 </div>
                 <div class="modal-body">
                     <form id="formProducto">
-                        <input type="hidden" id="prodId"> <div class="mb-3">
+                        <input type="hidden" id="prodId">
+                        <div class="mb-3">
                             <label class="form-label">Nombre del Producto</label>
-                            <input type="text" class="form-control" id="prodNombre" required>
+                            <input type="text" class="form-control" id="txtNombre" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Marca</label>
-                                <input type="text" class="form-control" id="prodMarca">
+                                <input type="text" class="form-control" id="txtMarca">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">SKU (Código)</label>
-                                <input type="text" class="form-control" id="prodSku">
+                                <input type="text" class="form-control" id="txtSku">
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">URL de Imagen</label>
-                            <input type="url" class="form-control" id="prodImagen" placeholder="https://ejemplo.com/foto.jpg">
+                            <input type="url" class="form-control" id="txtImagen" placeholder="https://ejemplo.com/foto.jpg">
                         </div>
                     </form>
                 </div>
