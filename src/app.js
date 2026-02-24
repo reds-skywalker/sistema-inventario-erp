@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require ('cors');
 const authRoutes = require('./routes/authRoutes');
 const path = require('path');
+const errorHandler = require('./middleware/errorHandler');
 //Me permite tomar las variables en mi archivo .env
 require('dotenv').config();
 require('./config/db'); //Previamente configure mi conexion a db
@@ -33,7 +34,12 @@ app.get('/',(req, res) => {
     });
 } );
 
+app.use(errorHandler);
 //encender el servidor
-app.listen(PORT, () => {
-    console.log(`SERVIDOR CORRIENDO EN http://localhost:${PORT}`)
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Servidor corriendo en el puerto ${PORT}`);
+    });
+}
+
+module.exports = app;

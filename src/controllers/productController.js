@@ -3,8 +3,30 @@ const Product = require('../models/productModel');
 
 exports.obtenerProductos = async (req, res) => {
     try {
-        const productos = await Product.getAll();
-        res.status(200).json(productos);
+        // Capturar variables de la URL
+        let { page = 1, limit = 10, marca = '' } = req.query;
+
+        page = parseInt(page);
+        limit = parseInt(limit);
+        const offset = (page - 1) * limit;
+
+        //  Llamar al modelo pasándole los parámetros
+        const resultado = await Product.getAll({ limit, offset, marca });
+
+        //  Calcular el total de páginas
+        const totalPages = Math.ceil(resultado.total / limit);
+
+        //  Enviar respuesta estructurada (JSON Avanzado)
+        res.status(200).json({
+            info: {
+                totalItems: resultado.total,
+                totalPages: totalPages,
+                currentPage: page,
+                limit: limit
+            },
+            data: resultado.rows 
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener productos' });
@@ -62,8 +84,37 @@ exports.buscarPorNombre = async (req, res) => {
 
 exports.verInventarioCompleto = async (req, res) => {
     try {
+        // reporte de base de datos 
         const reporte = await Product.getInventoryReport();
-        res.status(200).json(reporte);
+
+        let tipoCambioUSD = null;
+        try {
+            // API pública de tipos de cambio 
+            const apiRes = await fetch('https://open.er-api.com/v6/latest/MXN');
+            const data = await apiRes.json();
+            tipoCambioUSD = data.rates.USD; 
+        } catch (apiError) {
+            console.error('⚠️ No se pudo conectar a la API de divisas:', apiError.message);
+            // manejo de errores
+        }
+
+        // suma total de dinero 
+        const totalValorMXN = reporte.reduce((suma, item) => suma + Number(item.valor_inventario), 0);
+        
+        // Hacemos la conversión a Dólares 
+        const totalValorUSD = tipoCambioUSD ? (totalValorMXN * tipoCambioUSD).toFixed(2) : null;
+
+        // Enviamos la respuesta 
+        res.status(200).json({
+            resumen_financiero: {
+                moneda_base: 'MXN',
+                valor_total_mxn: totalValorMXN,
+                valor_total_usd: totalValorUSD,
+                tasa_conversion_usd: tipoCambioUSD
+            },
+            detalle_productos: reporte
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al generar el reporte de inventario' });

@@ -2,10 +2,29 @@ const db = require('../config/db');
 
 const Product = {
     // Obtener todos los productos
-    getAll: async () => {
-        const query = 'SELECT * FROM productos WHERE activo = true ORDER BY creado_en DESC';
-        const [rows] = await db.execute(query);
-        return rows;
+
+     getAll: async ({ limit = 10, offset = 0, marca = '' }) => {
+        let query = 'SELECT * FROM productos WHERE activo = true';
+        let params = [];
+
+        // 2. Agregar filtro dinámico
+        if (marca) {
+            query += ' AND marca = ?';
+            params.push(marca);
+        }
+
+        // 3. Obtener el total exacto de registros
+        const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
+        const [countRows] = await db.execute(countQuery, params);
+        const total = countRows[0].total;
+
+        // 4. CORRECCIÓN: Inyectamos los números directamente en el string 
+        // para evitar el error de parseo del driver de MySQL con los signos (?)
+        query += ` ORDER BY creado_en DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`;
+        
+        const [rows] = await db.execute(query, params);
+        
+        return { total, rows };
     },
 
     // Crear un nuevo producto base (sin stock todavía)

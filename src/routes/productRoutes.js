@@ -2,19 +2,20 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
-const authMiddleware = require('../middleware/authMiddleware'); // Asegúrate que la ruta sea correcta
 
-// Ruta pública (cualquiera puede ver qué vendemos)
-router.get('/', productController.obtenerProductos);
-router.get('/buscar', productController.buscarPorNombre);
+// Middlewares
+const authMiddleware = require('../middleware/authMiddleware');
+const verificarRol = require('../middleware/roleMiddleware');
 
-router.get('/stock', authMiddleware, productController.verInventarioCompleto);
+// Rutas Públicas (Cualquier empleado logueado)
+router.get('/', authMiddleware, productController.obtenerProductos);
+router.get('/buscar', authMiddleware, productController.buscarPorNombre);
 
-// Ruta protegida (solo usuarios con Token pueden crear)
-// El authMiddleware va en medio
-router.post('/', authMiddleware, productController.crearProducto);
+router.get('/stock', authMiddleware, productController.verInventarioCompleto); 
 
-router.put('/:id', authMiddleware, productController.actualizarProducto);
-router.delete('/:id', authMiddleware, productController.eliminarProducto);
+// Rutas Privadas (SOLO ADMIN)
+router.post('/', authMiddleware, verificarRol(['admin']), productController.crearProducto);
+router.put('/:id', authMiddleware, verificarRol(['admin']), productController.actualizarProducto);
+router.delete('/:id', authMiddleware, verificarRol(['admin']), productController.eliminarProducto);
 
 module.exports = router;

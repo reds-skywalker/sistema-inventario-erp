@@ -2,27 +2,31 @@ const token = localStorage.getItem('token');
 if (!token) window.location.href = '/index.html';
 
 let carrito = [];
-let catalogo = []; // Aquí guardaremos info completa (nombre, stock) para validar
+let catalogo = []; // Aquí guardaremos la lista de productos para validar stock
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarCatalogo();
 });
 
-// 1. Cargar productos para el Select
+// 1. CARGAR CATÁLOGO (ACTUALIZADO PARA LA NUEVA ESTRUCTURA)
 async function cargarCatalogo() {
     try {
-        // Usamos el endpoint de stock para saber cuánto hay disponible realmente
         const response = await fetch('/api/productos/stock', { 
             headers: { 'Authorization': token } 
         });
-        catalogo = await response.json();
+        
+        // El backend ahora devuelve { resumen_financiero, detalle_productos }
+        const data = await response.json();
+        
+        // CORRECCIÓN: Extraemos solo la lista de productos para el catálogo
+        catalogo = data.detalle_productos; 
         
         const select = document.getElementById('selProducto');
         select.innerHTML = '<option value="">Seleccione un producto...</option>';
         
         catalogo.forEach(prod => {
-            // Solo mostramos si tiene stock > 0 (opcional, pero recomendado)
-            if (prod.stock_total > 0) {
+            // Mostramos solo productos con stock disponible
+            if (parseInt(prod.stock_total) > 0) {
                 const option = document.createElement('option');
                 option.value = prod.id;
                 option.text = `${prod.nombre} (Stock: ${prod.stock_total})`;
@@ -31,12 +35,12 @@ async function cargarCatalogo() {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Error al cargar el catálogo:", error);
         alert("Error cargando productos");
     }
 }
 
-// 2. Evento al seleccionar producto (Mostrar stock)
+// 2. EVENTO AL SELECCIONAR PRODUCTO (MOSTRAR STOCK)
 document.getElementById('selProducto').addEventListener('change', (e) => {
     const id = e.target.value;
     const infoStock = document.getElementById('infoStock');
@@ -46,15 +50,15 @@ document.getElementById('selProducto').addEventListener('change', (e) => {
         return;
     }
 
+    // Buscamos el producto seleccionado en nuestro catálogo local
     const prod = catalogo.find(p => p.id == id);
     if (prod) {
         document.getElementById('stockDisplay').textContent = prod.stock_total;
         infoStock.classList.remove('d-none');
-        // Opcional: Podríamos pre-llenar el precio si tuvieramos un "precio sugerido"
     }
 });
 
-// 3. Agregar al Carrito
+// 3. AGREGAR AL CARRITO (CON VALIDACIÓN DE STOCK)
 document.getElementById('formAgregarCarrito').addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -62,32 +66,26 @@ document.getElementById('formAgregarCarrito').addEventListener('submit', (e) => 
     const cantidad = parseInt(document.getElementById('txtCantidad').value);
     const precio = parseFloat(document.getElementById('txtPrecio').value);
 
-    // Validaciones
     if (!id || cantidad <= 0 || isNaN(precio)) return alert("Datos inválidos");
 
     const prod = catalogo.find(p => p.id == id);
-    
-    // Validar Stock
     const stockDisponible = parseInt(prod.stock_total);
     
-    // Verificar si ya tengo ese producto en el carrito para sumar cantidades
+    // Verificar si el producto ya está en el carrito para sumar cantidades
     const itemEnCarrito = carrito.find(item => item.producto_id == id);
-    const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
+    const cantidadPrevia = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-    if ((cantidad + cantidadEnCarrito) > stockDisponible) {
-        return alert(`¡No tienes suficiente stock! Disponible: ${stockDisponible}, Intentas vender: ${cantidad + cantidadEnCarrito}`);
+    if ((cantidad + cantidadPrevia) > stockDisponible) {
+        return alert(`Stock insuficiente. Disponible: ${stockDisponible}, En carrito: ${cantidadPrevia}`);
     }
 
-    // Agregar o Actualizar Carrito
     if (itemEnCarrito) {
         itemEnCarrito.cantidad += cantidad;
-        // Si el precio cambió, podrías decidir actualizarlo o crear una línea nueva. 
-        // Por simplicidad, actualizamos al último precio ingresado.
-        itemEnCarrito.precio_venta = precio;
+        itemEnCarrito.precio_venta = precio; // Actualizamos al precio más reciente
     } else {
         carrito.push({
             producto_id: id,
-            nombre: prod.nombre, // Solo visual
+            nombre: prod.nombre,
             cantidad: cantidad,
             precio_venta: precio
         });
@@ -98,7 +96,7 @@ document.getElementById('formAgregarCarrito').addEventListener('submit', (e) => 
     document.getElementById('infoStock').classList.add('d-none');
 });
 
-// 4. Dibujar Carrito
+// 4. DIBUJAR CARRITO
 function renderizarCarrito() {
     const tbody = document.getElementById('tablaCarrito');
     tbody.innerHTML = '';
@@ -129,14 +127,12 @@ window.eliminarDelCarrito = (index) => {
     renderizarCarrito();
 };
 
-// 5. FINALIZAR VENTA (POST al Backend)
+// 5. FINALIZAR VENTA (POST AL BACKEND)
 window.finalizarVenta = async () => {
     if (carrito.length === 0) return alert("El carrito está vacío");
-
-    if (!confirm("¿Confirmar venta? Esto descontará el inventario.")) return;
+    if (!confirm("¿Confirmar venta? Se descontará el inventario.")) return;
 
     try {
-        // Estructura que espera el backend: { productos: [ ... ] }
         const payload = {
             productos: carrito.map(item => ({
                 producto_id: item.producto_id,
@@ -157,16 +153,16 @@ window.finalizarVenta = async () => {
         const result = await response.json();
 
         if (response.ok) {
-            alert(`✅ ¡Venta registrada con éxito! ID Venta: ${result.venta_id}`);
-            carrito = []; // Limpiar carrito
+            alert(`Venta registrada. ID Venta: ${result.venta_id}`);
+            carrito = []; 
             renderizarCarrito();
-            cargarCatalogo(); // Recargar catálogo para actualizar stocks visuales
+            cargarCatalogo(); 
         } else {
-            alert("Error: " + (result.message || "Error desconocido"));
+            alert("Error: " + (result.message || "No se pudo procesar la venta"));
         }
 
     } catch (error) {
-        console.error(error);
-        alert("Error de conexión");
+        console.error("Error en la conexión:", error);
+        alert("Error de conexión con el servidor");
     }
 };
