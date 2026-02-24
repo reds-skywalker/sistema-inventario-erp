@@ -14,7 +14,10 @@ const pool = mysql.createPool({//Variables para conectar mi pool de db
     database: process.env.DB_NAME,
     waitForConnections : true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    ssl: {
+    rejectUnauthorized: false // Esto permite la conexión segura con Aiven
+  }
 });
 
 const promisePool = pool.promise();
