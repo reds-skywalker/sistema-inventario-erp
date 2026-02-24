@@ -5,6 +5,10 @@ console.log("Chequeando variables de entorno:");
 console.log("DB_USER:", process.env.DB_USER);
 console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? "****" : "NO EXISTE");
 console.log("DB_NAME:", process.env.DB_NAME);
+console.log("Intentando conectar a MySQL...");
+console.log("Host:", process.env.DB_HOST);
+console.log("Port:", process.env.DB_PORT); 
+console.log("User:", process.env.DB_USER);
 
 
 const pool = mysql.createPool({//Variables para conectar mi pool de db
